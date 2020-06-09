@@ -90,7 +90,7 @@
     9.  fAlpha:   continuous  # angle of major axis with vector to origin [deg]
    10.  fDist:    continuous  # distance from origin to center of ellipse [mm]
    11.  class:    g,h         # gamma (signal), hadron (background)
-
+    fLength,fWidth,fSize,fConc.fConc1.fAsym,fM3Long,fM3Trans,fAlpha,fDist,class
 8. Missing Attribute Values: None
 
 9. Class Distribution:
