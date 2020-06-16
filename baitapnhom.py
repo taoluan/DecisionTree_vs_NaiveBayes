@@ -19,8 +19,34 @@ y = dt.iloc[:,10:11]
 #plt.scatter(x,y)
 #plt.show()
 #print(x)
-print(np.unique(len(x)))
-print(len(np.unique(dt.fSize)))
+#print(temp.count('g'))
+#print(len(dt.fLength))
+#print(len(np.unique(y)))
+#Bieu do
+def showbieudo(data1,data2,title):
+    labels = ['Lan 1', 'Lan 2', 'Lan 3', 'Lan 4', 'Lan 5', 'Lan 6',  'Lan 7',  'Lan 8',  'Lan 9',  'Lan 10']
+    x = np.arange(len(labels)) 
+    width = 0.35 
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, data1, width, label='Cay Quyet Dinh')
+    rects2 = ax.bar(x + width/2, data2, width, label='Cay Bayes')
+    ax.set_ylabel('Accuracy')
+    ax.set_title(title)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+    autolabel(rects1)
+    autolabel(rects2)
+    fig.tight_layout()
+    plt.show()
 #cay quyet dinh - holdout
 def cayquyetdinh_holdout_gini(x,y):
     X_train,X_test,y_train,y_test = train_test_split(x,y, test_size=1/3.0, random_state=100)
@@ -44,39 +70,84 @@ def cayquyetdinh_holdout_entropy(x,y):
 def cayquyetdinh_vs_caybayes_kfold(X,Y):
     accuracy_bayes = 0
     accuracy_cqd = 0
+    i = 0
+    arr_accqd = []
+    arr_bayes = []
     model = GaussianNB()
-    kf= KFold(n_splits=5,shuffle=True,random_state=True)
+    kf= KFold(n_splits=10,shuffle=True,random_state=True)
     for train_index, test_index in kf.split(X):
         #print("TRAIN:", train_index, "TEST:", test_index)
         X_train, X_test = X.iloc[train_index,], X.iloc[test_index,]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        #cay quyet dinh
         nghithuc_gini = DecisionTreeClassifier(criterion = "gini", random_state = None,max_depth=8, min_samples_leaf=1)
         nghithuc_gini.fit(X_train, y_train)
         y_pred = nghithuc_gini.predict(X_test)
         accuracy_cqd += accuracy_score(y_test,y_pred)
-        #print("cay quyet dinh do chinh xac",)
+        arr_accqd.append(round((accuracy_score(y_test,y_pred)*100),2))
+        #cay bayes
         model.fit(X_train, y_train.values.ravel())
         thucte = y_test
         dubao = model.predict(X_test)
         accuracy_bayes += accuracy_score(thucte,dubao)
-        print("Accuracy cua cay bayes =",accuracy_score(thucte,dubao)*100,"Va cua cay quyet dinh =",accuracy_score(y_test,y_pred)*100)
-    print("TOTAL: Accuracy Bayes-kfold =",(accuracy_bayes/5)*100,"Va Cayquyetdinh-kfold =",(accuracy_cqd/5)*100)
+        arr_bayes.append(round((accuracy_score(thucte,dubao)*100),2))
+        #print("Lan",i+1,"Accuracy cua cay quyet dinh =",accuracy_score(y_test,y_pred)*100,"Va cua cay bayes =",accuracy_score(thucte,dubao)*100,)
+        i += 1
+    #print("TOTAL: Accuracy Va Cayquyetdinh-kfold =",(accuracy_cqd/10)*100," Va Bayes-kfold =",(accuracy_bayes/10)*100)
+    #showbieudo(arr_accqd,arr_bayes,"Nghi thuc Kfold")
+    return [round((accuracy_cqd/10)*100,2),round((accuracy_bayes/10)*100,2)]
 def cayquyetdinh_vs_caybayes_holdout(x,y):
     model = GaussianNB()
     accuracy_bayes = 0
     accuracy_cqd = 0
-    for i in range(0,5):
+    arr_accqd = []
+    arr_bayes = []
+    for i in range(0,10):
         X_train,X_test,y_train,y_test = train_test_split(x,y,test_size=1/3.0,shuffle=True,random_state=None)
         nghithuc_gini = DecisionTreeClassifier(criterion = "gini", random_state = 100,max_depth=9, min_samples_leaf=1)
         nghithuc_gini.fit(X_train, y_train)
         y_pred = nghithuc_gini.predict(X_test)
         accuracy_cqd += accuracy_score(y_test,y_pred)
+        arr_accqd.append(round((accuracy_score(y_test,y_pred)*100),2))
         model.fit(X_train, y_train.values.ravel())
         thucte = y_test
         dubao = model.predict(X_test)
         accuracy_bayes += accuracy_score(thucte,dubao)
-        print("Accuracy cua cay bayes =",accuracy_score(thucte,dubao)*100,"Va cua cay quyet dinh =",accuracy_score(y_test,y_pred)*100)
-    print("TOTAL: Accuracy Bayes-Holdout =",(accuracy_bayes/5)*100,"Va Cayquyetdinh-Holdout =",(accuracy_cqd/5)*100)
+        arr_bayes.append(round((accuracy_score(thucte,dubao)*100),2))
+       #print("Lan",i+1,"Accuracy cua cay quyet dinh =",accuracy_score(y_test,y_pred)*100,"Va cua cay bayes =",accuracy_score(thucte,dubao)*100)
+    #print("TOTAL: Accuracy Va Cayquyetdinh-HouldOut =",(accuracy_cqd/10)*100," Va Bayes-HouldOut     =",(accuracy_bayes/10)*100)
+    #showbieudo(arr_accqd,arr_bayes,"Nghi thuc Hold-Out")
+    return [round((accuracy_cqd/10)*100,2),round((accuracy_bayes/10)*100,2)]
+def danhgia_holfout_kfold(x,y):
+    accuracy_kf = cayquyetdinh_vs_caybayes_kfold(x,y)
+    accuracy_ho = cayquyetdinh_vs_caybayes_holdout(x,y)
+    print(accuracy_ho,accuracy_kf)
+    data1 = [accuracy_ho[0],accuracy_kf[0]]
+    data2 = [accuracy_ho[1],accuracy_kf[1]]
+    labels = ['Hould Out','Kfold']
+    x = np.arange(len(labels)) 
+    width = 0.4
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, data1, width, label='Cay Quyet Dinh')
+    rects2 = ax.bar(x + width/2, data2, width, label='Cay Bayes')
+    ax.set_ylabel('Accuracy')
+    ax.set_title('Do chinh xac cua Cay Quyet Dinh va Cay Bayes')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+    autolabel(rects1)
+    autolabel(rects2)
+    fig.tight_layout()
+    plt.show()
+    print(accuracy_ho)
 #cayquyetdinh_holdout_gini(x,y)
 #cayquyetdinh_holdout_entropy(x,y)
 #caybayes_kfold(x,y)
@@ -91,3 +162,4 @@ def cayquyetdinh_vs_caybayes_holdout(x,y):
 #28.0883,2.2504,0.3174,g
 #cayquyetdinh_vs_caybayes_holdout(x,y)
 #cayquyetdinh_vs_caybayes_kfold(x,y)
+danhgia_holfout_kfold(x,y)
